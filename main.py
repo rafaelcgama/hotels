@@ -81,6 +81,7 @@ def collecting_hotel_prices(driver, city, checkin_date, checkout_date, hotel_com
 
                 # Store the minimum price found (if available)
                 hotel_prices[hotel_name.title()] = min(prices) if prices else None
+                hotel_prices["Timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             except Exception as e:
                 print(f"Error fetching details for {hotel_name}: {str(e)}")
@@ -111,7 +112,7 @@ if __name__ == "__main__":
     driver.maximize_window()
 
     # Generate a list of 30 days from today
-    date_list = [(datetime.today() + timedelta(days=i)).strftime("%Y-%m-%d %H:%M:%S") for i in range(31)]
+    date_list = [(datetime.today() + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(31)]
 
     city = "Taubate"
 
@@ -142,7 +143,7 @@ if __name__ == "__main__":
     df = pd.DataFrame(results)
 
     # Reorder columns so "Check-in" is the first column
-    df = df[["Check-in"] + [col for col in df.columns if col != "Check-in"]]
+    df = df[["Check-in"] + ["Timestamp"] + [col for col in df.columns if col != "Check-in" and col != "Timestamp"]]
 
     # Save results to CSV
     # Create the "data" folder if it doesn't exist
