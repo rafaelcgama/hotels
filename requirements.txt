@@ -1,0 +1,5 @@
+selenium
+lxml
+webdriver-manager
+unidecode
+jupyter

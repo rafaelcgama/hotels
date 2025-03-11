@@ -1,0 +1,55 @@
+# pycharm
+.idea/
+.idea
+*.vscode
+**.vscode/**
+
+*.pyc
+
+
+**.vscode/**
+# Packages
+*.egg
+*.egg-info
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+venv
+/venv/*
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+
+# environment variables
+*.env
+
+#jupyter files
+/.ipynb_checkpoints/
+
+#json
+#*.json
+/tests/
+/email_sender/debug.log
+/email_sender/sent_list.json
+/notebooks/test.ipynb
+/email_sender/get_emails.py
+crawler/crawler_linkedin_jobs.py
+data_in_progress/
+job_database.py
+jobs_raw/
+/email_sender/email_ignore.txt
+
+.DS_Store
+data
