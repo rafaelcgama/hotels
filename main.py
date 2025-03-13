@@ -10,6 +10,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
+def normalize_string(s):
+    return unidecode(s.strip().lower())
+
+
 def create_webdriver():
     """Creates and returns a Selenium WebDriver instance with predefined options."""
     user_agents = [
@@ -83,16 +87,16 @@ def collecting_hotel_prices(driver, city, checkin_date, checkout_date, hotel_com
             try:
                 # Extract hotel name
                 name_element = hotel.find_element(By.XPATH, './/div[@data-testid="title"]')
-                hotel_name = unidecode(name_element.text.strip().lower())
+                hotel_name = normalize_string(name_element.text)
 
                 # Case-insensitive comparison
-                if not any(unidecode(h).lower() == hotel_name for h in hotel_competitors):
+                if not any(normalize_string(h) == hotel_name for h in hotel_competitors):
                     continue
 
                 # Extract hotel price
                 price_elements = hotel.find_elements(By.XPATH, './/span[@data-testid="price-and-discounted-price"]')
                 prices = [
-                    int("".join(filter(str.isdigit, price.text.strip())))  # Extract only digits from price
+                    int("".join(filter(str.isdigit, normalize_string(price.text))))  # Extract only digits from price
                     for price in price_elements if price.text
                 ]
 
@@ -133,7 +137,7 @@ if __name__ == "__main__":
         # "Prisma Plaza Hotel"
     ]
 
-    hotel_competitors = [unidecode(hotel).lower() for hotel in hotel_competitors]
+    hotel_competitors = [normalize_string(hotel) for hotel in hotel_competitors]
 
     # Collect data
     results = []
