@@ -29,6 +29,6 @@ To ensure dependencies are properly managed, create a virtual environment follow
 ### **3️⃣ Locate the Results**
 - After execution, the **CSV files** will be saved inside the **`data/` folder**.
 - The filename follows the format:
-```data/booking_hotel_prices_YYYY-MM-DD_HH-MM-SS.csv```
+```data/YYYY-MM-DD_HH-MM-SS/booking_hotel_prices_taubate.csv```
 - Example:
 ```data/2025-03-11_14:30:00_booking_hotel_prices_taubate.csv```

@@ -1,13 +1,13 @@
-import pandas as pd
-from datetime import datetime, timedelta
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from unidecode import unidecode
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from time import time
 import os
 import random
+import pandas as pd
+from time import time
+from selenium import webdriver
+from unidecode import unidecode
+from datetime import datetime, timedelta
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 def create_webdriver():
