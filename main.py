@@ -95,6 +95,8 @@ def collecting_hotel_prices(driver, city, checkin_date, checkout_date, hotel_com
 
                 # Extract hotel price
                 price_elements = hotel.find_elements(By.XPATH, './/span[@data-testid="price-and-discounted-price"]')
+
+                # TODO: check the logic to include numbers with decimals - check for brazil style decimals
                 prices = [
                     int("".join(filter(str.isdigit, normalize_string(price.text))))  # Extract only digits from price
                     for price in price_elements if price.text
@@ -150,8 +152,15 @@ if __name__ == "__main__":
     # Convert results to DataFrame
     df = pd.DataFrame(results)
 
-    # Reorder columns so "Check-in" is the first column
-    df = df[["Check_in"] + ["Timestamp"] + [col for col in df.columns if col != "Check_in" and col != "Timestamp"]]
+    # Select columns to convert (excluding check_in and timestamp)
+    cols_to_convert = df.columns.difference(['Check_in', 'Timestamp'])
+
+    # Convert to nullable Int64 type (which allows NaN)
+    df[cols_to_convert] = df[cols_to_convert].apply(pd.to_numeric, errors='coerce').astype('Int64')
+
+    # Ensure correct column order
+    ordered_columns = ['Check_in', 'Timestamp'] + sorted(cols_to_convert)
+    df = df[ordered_columns]
 
     # Save results to CSV
     # Create the "data" folder if it doesn't exist
