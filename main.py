@@ -77,7 +77,10 @@ def collecting_hotel_prices(driver, city, checkin_date, checkout_date, hotel_com
     wait_for_page_load(driver)
 
     # Dictionary to store prices
-    hotel_prices = {"Check_in": checkin_date}  # First column is the date
+    hotel_prices = {
+        "Check_in": checkin_date,  # First column is the date
+        "Timestamp": datetime.now().strftime("%Y-%m-%d")  # "%Y-%m-%d %H:%M:%S"
+    }
 
     try:
         # Find all hotel elements
@@ -96,7 +99,6 @@ def collecting_hotel_prices(driver, city, checkin_date, checkout_date, hotel_com
                 # Extract hotel price
                 price_elements = hotel.find_elements(By.XPATH, './/span[@data-testid="price-and-discounted-price"]')
 
-                # TODO: check the logic to include numbers with decimals - check for brazil style decimals
                 prices = [
                     int("".join(filter(str.isdigit, normalize_string(price.text))))  # Extract only digits from price
                     for price in price_elements if price.text
@@ -104,7 +106,6 @@ def collecting_hotel_prices(driver, city, checkin_date, checkout_date, hotel_com
 
                 # Store the minimum price found (if available)
                 hotel_prices[hotel_name.title()] = min(prices) if prices else None
-                hotel_prices["Timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             except Exception as e:
                 print(f"Error fetching details for {hotel_name}: {str(e)}")
