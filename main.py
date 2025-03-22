@@ -3,10 +3,11 @@ import random
 import pandas as pd
 from time import time
 from typing import List, Dict
-from selenium import webdriver
 from unidecode import unidecode
 from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -15,8 +16,8 @@ def normalize_string(s: str) -> str:
     return unidecode(s.strip().lower())
 
 
-def create_webdriver() -> webdriver.Chrome:
-    """Creates and returns a Selenium WebDriver instance with predefined options."""
+def create_webdriver() -> WebDriver:
+    """Creates and returns a Selenium WebDriver Chrome instance with predefined options."""
     user_agents = [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.110 Safari/537.36",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
@@ -24,7 +25,7 @@ def create_webdriver() -> webdriver.Chrome:
     ]
     chosen_user_agent = random.choice(user_agents)
 
-    options = webdriver.ChromeOptions()
+    options = Options()
     options.add_argument("--headless=new")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--disable-gpu")
@@ -33,12 +34,12 @@ def create_webdriver() -> webdriver.Chrome:
     options.add_argument("--start-maximized")
     options.add_argument(f"user-agent={chosen_user_agent}")
 
-    driver = webdriver.Chrome(options=options)
+    driver = WebDriver(options=options)
     driver.maximize_window()
     return driver
 
 
-def wait_for_page_load(driver: webdriver, timeout: int = 10):
+def wait_for_page_load(driver: WebDriver, timeout: int = 10):
     """
     Ensures that the Booking.com page is fully loaded by waiting for hotel listings to appear.
 
@@ -56,10 +57,14 @@ def wait_for_page_load(driver: webdriver, timeout: int = 10):
         print(f"❌ Page load timeout: {e}")
 
 
-def collecting_hotel_prices(driver: webdriver, city: str, checkin_date: str, checkout_date: str,
-                            hotel_competitors: List[str]) -> Dict[str, float]:
+def collect_hotel_prices(driver: WebDriver,
+                         city: str,
+                         checkin_date: str,
+                         checkout_date: str,
+                         hotel_competitors: List[str]
+                         ) -> Dict[str, float]:
     """
-    Scrapes the prices of a list of hotels from Booking.com for a given city and date
+    Scrapes the prices of a list of hotels from Booking.com for a given city in a given date.
 
     :param driver: Selenium WebDriver instance
     :param city: Name of the city
@@ -72,7 +77,9 @@ def collecting_hotel_prices(driver: webdriver, city: str, checkin_date: str, che
     print(f"Scraping data for {city} - Check-in: {checkin_date} to {checkout_date}")
 
     # Construct Booking.com search URL
-    search_url = f"https://www.booking.com/searchresults.html?ss={city}&checkin={checkin_date}&checkout={checkout_date}&group_adults=2&no_rooms=1&group_children=0"
+    search_url = (f"https://www.booking.com/searchresults.html?"
+                  f"ss={city}&checkin={checkin_date}&checkout={checkout_date}"
+                  f"&group_adults=2&no_rooms=1&group_children=0")
     driver.get(search_url)
 
     # Wait for full page load
@@ -142,12 +149,13 @@ if __name__ == "__main__":
         # "Prisma Plaza Hotel"
     ]
 
-    hotel_competitors = [normalize_string(hotel) for hotel in hotel_competitors]
+    hotel_competitors_normalized = [normalize_string(hotel) for hotel in hotel_competitors]
 
     # Collect data
-    results = []
-    for in_, out_ in zip(range(len(date_list) - 1), range(1, len(date_list))):
-        results.append(collecting_hotel_prices(driver, city, date_list[in_], date_list[out_], hotel_competitors))
+    results = [
+        collect_hotel_prices(driver, city, date_list[i], date_list[i + 1], hotel_competitors_normalized)
+        for i in range(len(date_list) - 1)
+    ]
 
     # Close WebDriver after collecting data
     driver.quit()
