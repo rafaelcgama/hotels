@@ -13,7 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 # ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-# Utility functions
+# Utility Functions
 # ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 def normalize_string(s: str) -> str:
@@ -64,7 +64,7 @@ def wait_for_page_load(driver: WebDriver, timeout: int = 10):
 
 
 # ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-# Scraping function
+# Scraping Function
 # ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 def collect_hotel_prices(driver: WebDriver,
@@ -134,43 +134,19 @@ def collect_hotel_prices(driver: WebDriver,
     return hotel_prices  # Return data as a dictionary
 
 
-# ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-# Main execution
-# ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+def save_hotel_price_date(results: Dict[str, Union[int, float]]) -> None:
+    """
+        Converts scraped hotel data into a DataFrame, cleans it, and saves it to a CSV file.
 
-if __name__ == "__main__":
-    t1 = time()
-    city = "Taubate"
+        Args:
+            results: List of dictionaries containing hotel price data.
+            city: City name (used in output filename).
+            date_list: List of dates used in the scraping (used to name the output).
+            output_dir: Folder where CSV will be saved (default is "data").
 
-    driver = create_webdriver()  # Start WebDriver
-
-    # Generate a list of 30 days from today
-    date_list = [(datetime.today() + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(31)]
-
-    # Define the hotel list (case-insensitive matching)
-    hotel_competitors = [
-        "San Michel Palace Hotel",
-        "Carlton Plaza Baobá",
-        "Olavo Bilac Hotel",
-        "Ibis Taubate",
-        "Ibis Styles Taubate",
-        "Hotel São Nicolau",
-        "Samambaia Executive Hotel",
-        # "Hotel Bike Taubate",
-        # "Prisma Plaza Hotel"
-    ]
-
-    hotel_competitors_normalized = [normalize_string(hotel) for hotel in hotel_competitors]
-
-    # Collect data
-    results = [
-        collect_hotel_prices(driver, city, date_list[i], date_list[i + 1], hotel_competitors_normalized)
-        for i in range(len(date_list) - 1)
-    ]
-
-    # Close WebDriver after collecting data
-    driver.quit()
-
+        Returns:
+            The cleaned pandas DataFrame.
+        """
     # Convert results to DataFrame
     df = pd.DataFrame(results)
 
@@ -190,6 +166,46 @@ if __name__ == "__main__":
 
     filename = f"data/{date_list[0]}_booking_hotel_prices_{city.lower()}.csv"
     df.to_csv(filename, index=False)
+
+
+# ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# Main Execution
+# ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    t1 = time()
+    city = "Taubate"
+
+    driver = create_webdriver()  # Start Chrome WebDriver
+
+    # Generate a list of 30 days from today
+    date_list = [(datetime.today() + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(31)]
+
+    # Define the hotel list (case-insensitive matching)
+    hotel_competitors = [
+        "Faro Hotel Taubaté",  # San Michel Palace Hotel",
+        "Carlton Plaza Baobá",
+        "Olavo Bilac Hotel",
+        "Ibis Taubate",
+        "Ibis Styles Taubate",
+        # "Hotel São Nicolau",
+        "Gran Continental Hotel Taubaté",  # Samambaia Executive Hotel",
+        "KEEP SUÍTES HOTEL",  # "Hotel Bike Taubate",
+        # "Prisma Plaza Hotel"
+    ]
+
+    hotel_competitors_normalized = [normalize_string(hotel) for hotel in hotel_competitors]
+
+    # Collect hotel price data
+    results = [
+        collect_hotel_prices(driver, city, date_list[i], date_list[i + 1], hotel_competitors_normalized)
+        for i in range(len(date_list) - 1)
+    ]
+
+    # Close WebDriver after collecting data
+    driver.quit()
+
+    create_hotel_price_chart(results)
 
     print("")
     print(f"Data saved to {filename}")
