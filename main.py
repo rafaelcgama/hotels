@@ -2,8 +2,8 @@ import os
 import random
 import pandas as pd
 from time import time
-from typing import List, Dict
 from unidecode import unidecode
+from typing import List, Dict, Union
 from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -11,6 +11,10 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+
+# ──────────────────────────────────────────────────────────────
+# Utility functions
+# ──────────────────────────────────────────────────────────────
 
 def normalize_string(s: str) -> str:
     return unidecode(s.strip().lower())
@@ -57,12 +61,16 @@ def wait_for_page_load(driver: WebDriver, timeout: int = 10):
         print(f"❌ Page load timeout: {e}")
 
 
+# ──────────────────────────────────────────────────────────────
+# Scraping function
+# ──────────────────────────────────────────────────────────────
+
 def collect_hotel_prices(driver: WebDriver,
                          city: str,
                          checkin_date: str,
                          checkout_date: str,
                          hotel_competitors: List[str]
-                         ) -> Dict[str, float]:
+                         ) -> Dict[str, Union[int, float]]:
     """
     Scrapes the prices of a list of hotels from Booking.com for a given city in a given date.
 
@@ -101,8 +109,7 @@ def collect_hotel_prices(driver: WebDriver,
                 name_element = hotel.find_element(By.XPATH, './/div[@data-testid="title"]')
                 hotel_name = normalize_string(name_element.text)
 
-                # Case-insensitive comparison
-                if not any(normalize_string(h) == hotel_name for h in hotel_competitors):
+                if hotel_name not in hotel_competitors:
                     continue
 
                 # Extract hotel price
@@ -125,16 +132,18 @@ def collect_hotel_prices(driver: WebDriver,
     return hotel_prices  # Return data as a dictionary
 
 
-if __name__ == "__main__":
+# ──────────────────────────────────────────────────────────────
+# Main execution
+# ──────────────────────────────────────────────────────────────
 
+if __name__ == "__main__":
     t1 = time()
+    city = "Taubate"
 
     driver = create_webdriver()  # Start WebDriver
 
     # Generate a list of 30 days from today
     date_list = [(datetime.today() + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(31)]
-
-    city = "Taubate"
 
     # Define the hotel list (case-insensitive matching)
     hotel_competitors = [
