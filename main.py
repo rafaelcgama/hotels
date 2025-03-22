@@ -2,6 +2,7 @@ import os
 import random
 import pandas as pd
 from time import time
+from typing import List, Dict
 from selenium import webdriver
 from unidecode import unidecode
 from datetime import datetime, timedelta
@@ -10,11 +11,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-def normalize_string(s):
+def normalize_string(s: str) -> str:
     return unidecode(s.strip().lower())
 
 
-def create_webdriver():
+def create_webdriver() -> webdriver.Chrome:
     """Creates and returns a Selenium WebDriver instance with predefined options."""
     user_agents = [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.110 Safari/537.36",
@@ -37,7 +38,7 @@ def create_webdriver():
     return driver
 
 
-def wait_for_page_load(driver, timeout=10):
+def wait_for_page_load(driver: webdriver, timeout: int = 10):
     """
     Ensures that the Booking.com page is fully loaded by waiting for hotel listings to appear.
 
@@ -55,15 +56,16 @@ def wait_for_page_load(driver, timeout=10):
         print(f"❌ Page load timeout: {e}")
 
 
-def collecting_hotel_prices(driver, city, checkin_date, checkout_date, hotel_competitors):
+def collecting_hotel_prices(driver: webdriver, city: str, checkin_date: str, checkout_date: str,
+                            hotel_competitors: List[str]) -> Dict[str, float]:
     """
-    Scrapes hotel names and prices from Booking.com for a given city and date range.
+    Scrapes the prices of a list of hotels from Booking.com for a given city and date
 
     :param driver: Selenium WebDriver instance
     :param city: Name of the city
     :param checkin_date: Check-in date (YYYY-MM-DD)
     :param checkout_date: Check-out date (YYYY-MM-DD)
-    :param hotel_competitors: List of hotel names to track
+    :param hotel_competitors: List of hotel names to get prices for a given date
     :return: Dictionary with hotel names as keys and prices as values
     """
 
