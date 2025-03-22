@@ -7,14 +7,14 @@ from typing import List, Dict, Union
 from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
 
 
-# ──────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 # Utility functions
-# ──────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 def normalize_string(s: str) -> str:
     return unidecode(s.strip().lower())
@@ -23,8 +23,10 @@ def normalize_string(s: str) -> str:
 def create_webdriver() -> WebDriver:
     """Creates and returns a Selenium WebDriver Chrome instance with predefined options."""
     user_agents = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.110 Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.110 "
+        "Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 "
+        "Safari/537.36",
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     ]
     chosen_user_agent = random.choice(user_agents)
@@ -61,9 +63,9 @@ def wait_for_page_load(driver: WebDriver, timeout: int = 10):
         print(f"❌ Page load timeout: {e}")
 
 
-# ──────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 # Scraping function
-# ──────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 def collect_hotel_prices(driver: WebDriver,
                          city: str,
@@ -132,9 +134,9 @@ def collect_hotel_prices(driver: WebDriver,
     return hotel_prices  # Return data as a dictionary
 
 
-# ──────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 # Main execution
-# ──────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     t1 = time()

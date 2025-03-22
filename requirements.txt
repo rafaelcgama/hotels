@@ -1,5 +1,5 @@
-selenium
 lxml
-webdriver-manager
-unidecode
 jupyter
+selenium
+unidecode
+webdriver-manager
