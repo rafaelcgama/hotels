@@ -167,6 +167,9 @@ def save_hotel_price_date(results: Dict[str, Union[int, float]]) -> None:
     filename = f"data/{date_list[0]}_booking_hotel_prices_{city.lower()}.csv"
     df.to_csv(filename, index=False)
 
+    print(f"Data saved to {filename}")
+    print("")
+
 
 # ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 # Main Execution
@@ -205,9 +208,7 @@ if __name__ == "__main__":
     # Close WebDriver after collecting data
     driver.quit()
 
-    create_hotel_price_chart(results)
+    save_hotel_price_date(results)
 
-    print("")
-    print(f"Data saved to {filename}")
     print("")
     print(f"\n⏱ Time taken: {round(time() - t1, 2)}s")
