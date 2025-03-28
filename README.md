@@ -24,7 +24,7 @@ To ensure dependencies are properly managed, create a virtual environment follow
    - **In PyCharm**: Right-click `main.py` and select **Run**.
    - **In Terminal**:
      ```sh
-     python main.py
+     python collect_rates.py
      ```
 ### **3️⃣ Locate the Results**
 - After execution, the **CSV files** will be saved inside the **`data/` folder**.
