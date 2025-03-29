@@ -2,7 +2,7 @@
 
 # Set up paths
 PROJECT_DIR="/Users/rafaelcgama/Projects/hotels" # Change to the path where the hotels project is stored
-ARCHIVE_FILE="$PROJECT_DIR/data/data.zip"  # This will store the compressed file
+ARCHIVE_FILE="$PROJECT_DIR/data/rates.zip"  # This will store the compressed file
 
 # Activate your virtual environment
 source "$PROJECT_DIR/.venv/bin/activate"
