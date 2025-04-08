@@ -5,9 +5,9 @@ from datetime import datetime
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 
-EMAIL_SEND_FROM = "rafaelcgama@hotmail.com"
+EMAIL_SEND_FROM = ""
 EMAIL_SEND_FROM_PASSWORD = ""
-EMAIL_SEND_TO = "rafaelcgama@gmail.com"
+EMAIL_SEND_TO = ""
 
 
 def login(username, password):

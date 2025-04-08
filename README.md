@@ -21,7 +21,7 @@ To ensure dependencies are properly managed, create a virtual environment follow
 ### **2️⃣ Run the Script**
 1. **Open `main.py`** in your IDE or terminal.
 2. **Run the script**:
-   - **In PyCharm**: Right-click `main.py` and select **Run**.
+   - **In PyCharm**: Right-click `collect_rates.py` and select **Run**.
    - **In Terminal**:
      ```sh
      python collect_rates.py
