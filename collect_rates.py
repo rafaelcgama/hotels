@@ -212,6 +212,3 @@ if __name__ == "__main__":
 
     print("")
     print(f"\n⏱ Time taken: {round(time() - t1, 2)}s")
-
-
-sfdóigjipdsuhnfgouar hst98q3420uv5697
