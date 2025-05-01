@@ -6,15 +6,18 @@ ARCHIVE_FILE="$PROJECT_DIR/data/rates.zip"  # This will store the compressed fil
 
 # Activate your virtual environment
 source "$PROJECT_DIR/.venv/bin/activate"
+
+# Change to project directory to ensure relative paths work
+cd "$PROJECT_DIR"
+
+# Run the Python script from inside the correct folder
 python collect_rates.py
 
-# Combine the current output with previous results and create a compressed archive
-cd "$PROJECT_DIR/data"
+# Zip all CSVs into archive
+cd data
+zip -r "$ARCHIVE_FILE" *.csv
 
-# Append the new output to the previous one and create the zip archive
-zip -r "$ARCHIVE_FILE" *.csv  # Compress all CSVs into a zip archive
+# Deactivate venv
+deactivate
 
 #python send_email.py
-
-# Deactivate the virtual environment (optional)
-deactivate
