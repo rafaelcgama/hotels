@@ -12,8 +12,13 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-import knime.scripting.io as knio
+#import knime.scripting.io as knio
 import sys
+
+# ─────────────────────────────────────────────────────────────
+# Global Timestamp (from script start)
+# ─────────────────────────────────────────────────────────────
+script_start_timestamp = datetime.now(timezone(timedelta(hours=-3)))
 
 
 # ─────────────────────────────────────────────────────────────
@@ -40,7 +45,7 @@ def create_webdriver() -> WebDriver:
     chosen_user_agent = random.choice(user_agents)
 
     options = Options()
-    options.add_argument("--headless")
+ #   options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument(f"user-agent={chosen_user_agent}")
@@ -76,8 +81,7 @@ def collect_hotel_prices(driver: WebDriver, city: str, checkin_date: str, checko
     driver.get(search_url)
     wait_for_page_load(driver)
 
-    # ✅ Brazil local time (UTC-3)
-    now = datetime.now(timezone(timedelta(hours=-3)))
+    now = script_start_timestamp
 
     hotel_prices = {
         "Check_in": checkin_date,
@@ -133,17 +137,22 @@ def save_hotel_price_date(results: List[Dict[str, Union[int, float]]]) -> None:
 # Main Execution
 # ─────────────────────────────────────────────────────────────
 t1 = time()
-city = "Taubate"
+city = "Campos do Jordão"
 
 driver = create_webdriver()
 
 # Adjust number of days here
-date_list = [(datetime.today() + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(61)]
+date_list = [(datetime.today() + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(3)]
 
 hotel_competitors = [
-    "Faro Hotel Taubaté", "Carlton Plaza Baobá", "Olavo Bilac Hotel",
-    "Ibis Taubate", "Ibis Styles Taubate",
-    "Gran Continental Hotel Taubaté", "KEEP SUÍTES HOTEL"
+    "Hotel Vila Inglesa",
+    "Villa Amistà Campos do Jordão",
+    "Grande Hotel Campos do Jordao",
+    "Hotel Toriba",
+    "Hotel Boutique Quebra-Noz",
+    "Ort Hotel",
+    "Bendito Cacao Resort & Spa",
+    "Carballo Hotel & Spa"
 ]
 hotel_competitors_normalized = [normalize_string(hotel) for hotel in hotel_competitors]
 

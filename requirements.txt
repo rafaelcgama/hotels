@@ -3,3 +3,4 @@ jupyter
 selenium
 unidecode
 webdriver-manager
+knio
