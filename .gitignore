@@ -2,12 +2,10 @@
 .idea/
 .idea
 *.vscode
-**.vscode/**
+**.vscode/
 
 *.pyc
 
-
-**.vscode/**
 # Packages
 *.egg
 *.egg-info
@@ -23,6 +21,7 @@ lib
 lib64
 venv
 /venv/*
+.venv/
 
 # Installer logs
 pip-log.txt
@@ -34,14 +33,18 @@ nosetests.xml
 
 # environment variables
 *.env
+.env
 
 #jupyter files
 /.ipynb_checkpoints/
 *.ipynb
 
 .DS_Store
-data
-old_data
+
+# Data and Logs
+data/
+old_data/
 *.log
 *.zip
-#mf
+*.db
+*.sqlite3

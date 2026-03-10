@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Logs
+logs/
+*.log
+
+# Data and SQLite
+data/
+*.sqlite3
+*.db
+*.csv
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb
+
+# IDE and OS
+.idea/
+.DS_Store

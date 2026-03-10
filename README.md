@@ -1,34 +1,56 @@
-
 # 🏨 Hotel Price Tracker - Taubaté, SP
 
-This project **captures hotel prices** from a given list of hotels in **Taubaté, São Paulo** at a specific time of the day and saves the results as a `.csv` file inside the `data/` folder.
-
----
+This project **captures hotel prices** from a given list of hotels in **Taubaté, São Paulo** at a specific time of the day.
 
 ## 📌 Features
-✅ **Tracks multiple hotels** in Taubaté, SP  
-✅ **Automated data collection** at a given time  
-✅ **Saves results in `.csv` format** for easy analysis  
-✅ **Runs in a Python environment** with minimal dependencies  
+✅ **Tracks multiple hotels** in Taubaté, SP dynamically via `.env` files  
+✅ **Automated data collection** using Headless Chromium and Selenium 4  
+✅ **Structured SQL Storage** directly into an robust `sqlite3` database replacing multiple `.csv` dumps  
+✅ **Automated Notifier** emailing the consolidated `data/prices.db` with your SMTP configs  
+✅ **Docker Support** easy environment bootstrapping and containerization   
+✅ **Robust testing** via `pytest`   
 
 ---
 
 ## 🔧 Installation & Setup
 
-### **1️⃣ Create a Python Virtual Environment**
-To ensure dependencies are properly managed, create a virtual environment following the instructions in https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html
+### **1️⃣ Configuration Setup**
+1. Copy `.env` to `.env.local` or edit the existing `.env` file directly:
+```bash
+cp .env .env.local
+```
+2. Populate the `EMAIL_SEND_FROM`, `EMAIL_SEND_FROM_PASSWORD` and `EMAIL_SEND_TO` so notifications can be sent successfully.
 
-### **2️⃣ Run the Script**
-1. **Open `main.py`** in your IDE or terminal.
-2. **Run the script**:
-   - **In PyCharm**: Right-click `collect_rates.py` and select **Run**.
-   - **In Terminal**:
-     ```sh
-     python collect_rates.py
-     ```
-### **3️⃣ Locate the Results**
-- After execution, the **CSV files** will be saved inside the **`data/` folder**.
-- The filename follows the format:
-```data/YYYY-MM-DD_HH-MM-SS/booking_hotel_prices_taubate.csv```
-- Example:
-```data/2025-03-11_14:30:00_booking_hotel_prices_taubate.csv```
+### **2️⃣ Running via Docker (Recommended)**
+Ensure you have Docker and Docker Compose installed.
+```bash
+docker-compose build
+docker-compose up -d
+```
+*Note: This will execute the scraper, ingest to the SQLite DB, map logs to `/logs`, store data in `/data`, and automatically shut down the container upon completion. You can setup your Host machine cron to execute `docker-compose up` daily.*
+
+### **3️⃣ Running via Python Virtual Environment**
+If you prefer running it locally on your machine without Docker:
+1. Create and activate a Virtual Environment
+```shell
+python3 -m venv .venv
+source .venv/bin/activate
+```
+2. Install dependencies
+```shell
+pip install -r requirements.txt
+```
+3. Run the Orchestrator
+```shell
+python main.py
+```
+
+### **4️⃣ Testing**
+We utilize `pytest` to execute unit and mocked E2E tests:
+```shell
+PYTHONPATH=. pytest tests/
+```
+
+### **5️⃣ Locate the Results**
+- The database is dynamically created explicitly inside the **`data/` folder**.
+- Open `data/prices.db` using any SQLite viewer (like DBeaver or standard CLI) to review ingested outputs efficiently without scrolling through thousands of ZIPs!

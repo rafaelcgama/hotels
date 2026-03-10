@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  hotel-scraper:
+    build: .
+    container_name: hotel_price_scraper
+    # Read variables from our env file
+    env_file:
+      - .env
+    volumes:
+      # Map the data folder so the SQLite database persists on the host machine
+      - ./data:/app/data
+      # Map the logs folder to persist application logs
+      - ./logs:/app/logs
+    # Setting an automatic restart policy. 
+    # If it fails, it won't spin loop infinitely, it restarts unless explicitly stopped.
+    restart: unless-stopped

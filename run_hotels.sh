@@ -1,23 +1,20 @@
 #!/bin/bash
 
 # Set up paths
-PROJECT_DIR="/Users/rafaelcgama/Projects/hotels" # Change to the path where the hotels project is stored
-ARCHIVE_FILE="$PROJECT_DIR/data/rates.zip"  # This will store the compressed file
+PROJECT_DIR="/Users/rafaelcgama/Projects/hotels"
 
-# Activate your virtual environment
-source "$PROJECT_DIR/.venv/bin/activate"
+# Activate virtual environment if available
+if [ -f "$PROJECT_DIR/.venv/bin/activate" ]; then
+    source "$PROJECT_DIR/.venv/bin/activate"
+fi
 
-# Change to project directory to ensure relative paths work
-cd "$PROJECT_DIR"
+# Change to project directory
+cd "$PROJECT_DIR" || exit 1
 
-# Run the Python script from inside the correct folder
-python collect_rates.py
+# Run the Python main orchestrator
+python main.py
 
-# Zip all CSVs into archive
-cd data
-zip -r "$ARCHIVE_FILE" *.csv
-
-# Deactivate venv
-deactivate
-
-#python send_email.py
+# Deactivate venv if active
+if command -v deactivate &> /dev/null; then
+    deactivate
+fi

@@ -3,3 +3,8 @@ jupyter
 selenium
 unidecode
 webdriver-manager
+pandas
+numpy
+python-dotenv
+pytest
+pytest-mock
