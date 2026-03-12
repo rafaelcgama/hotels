@@ -1,5 +1,6 @@
-import json
 from src.config import HOTEL_COMPETITORS, CITY, DAYS_AHEAD
+from src.scraper.booking_scraper import normalize_string
+
 
 def test_config_loads_defaults():
     """Verify that configuration loads correctly even if .env is missing."""
@@ -9,11 +10,11 @@ def test_config_loads_defaults():
     assert len(HOTEL_COMPETITORS) > 0
     assert "Faro Hotel Taubaté" in HOTEL_COMPETITORS
 
+
 def test_config_types():
     assert isinstance(CITY, str)
     assert isinstance(DAYS_AHEAD, int)
-    
-from src.scraper.booking_scraper import normalize_string
+
 
 def test_normalize_string():
     """Verify string normalization drops accents and lowercase."""

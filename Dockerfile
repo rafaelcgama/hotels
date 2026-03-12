@@ -6,6 +6,9 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# Set Chrome binary path for the scraper
+ENV CHROME_BINARY=/usr/bin/chromium
+
 # Install required system packages, Chromium, and its webdriver
 RUN apt-get update && apt-get install -y \
     chromium \
@@ -29,5 +32,5 @@ COPY . /app/
 # Create necessary directories that will be mounted as volumes
 RUN mkdir -p logs data
 
-# Default command to execute the scraper pipeline
+# Default command to execute the scraper orchestrator
 CMD ["python", "main.py"]

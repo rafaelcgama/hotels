@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Set up paths
-PROJECT_DIR="/Users/rafaelcgama/Projects/hotels"
+# Set up paths — resolve relative to this script's location
+PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Activate virtual environment if available
 if [ -f "$PROJECT_DIR/.venv/bin/activate" ]; then

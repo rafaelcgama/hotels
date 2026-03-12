@@ -1,51 +1,75 @@
 import os
-import json
-from dotenv import load_dotenv
 from pathlib import Path
+from dotenv import load_dotenv
 
-# Load environment variables from .env file
-# Provide the absolute path to .env file at the root of the project
+# Absolute path to the project root (two levels up from this file)
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-# --- Configuration Variables ---
+# Load .env file if present (values already in the environment take priority)
+load_dotenv(BASE_DIR / ".env")
 
-# Email Configurations
-EMAIL_SEND_FROM = os.getenv("EMAIL_SEND_FROM", "")
-EMAIL_SEND_FROM_PASSWORD = os.getenv("EMAIL_SEND_FROM_PASSWORD", "")
-EMAIL_SEND_TO = os.getenv("EMAIL_SEND_TO", "")
+# ---------------------------------------------------------------------------
+# Search settings
+# ---------------------------------------------------------------------------
+CITY: str = os.environ.get("CITY", "Taubate")
 
-# Search Configurations
-CITY = os.getenv("CITY", "Taubate")
-# Read hotel list from environment variable as JSON string, fallback to default list
-HOTEL_COMPETITORS_JSON = os.getenv("HOTEL_COMPETITORS", "[]")
-try:
-    HOTEL_COMPETITORS = json.loads(HOTEL_COMPETITORS_JSON)
-except json.JSONDecodeError:
-    print("Warning: Failed to parse HOTEL_COMPETITORS from .env. Using empty list.")
-    HOTEL_COMPETITORS = []
-
-# Default if not provided in .env
-if not HOTEL_COMPETITORS:
-    HOTEL_COMPETITORS = [
+_hotel_competitors_env = os.environ.get("HOTEL_COMPETITORS", "")
+HOTEL_COMPETITORS: list = (
+    [h.strip() for h in _hotel_competitors_env.split(",") if h.strip()]
+    if _hotel_competitors_env
+    else [
         "Faro Hotel Taubaté",
         "Carlton Plaza Baobá",
         "Olavo Bilac Hotel",
         "Ibis Taubate",
         "Ibis Styles Taubate",
         "Gran Continental Hotel Taubaté",
-        "KEEP SUÍTES HOTEL"
+        "KEEP SUÍTES HOTEL",
     ]
+)
 
-# Days ahead to search
-DAYS_AHEAD = int(os.getenv("DAYS_AHEAD", "31"))
+DAYS_AHEAD: int = int(os.environ.get("DAYS_AHEAD", 31))
 
+# ---------------------------------------------------------------------------
+# Email settings
+# ---------------------------------------------------------------------------
+EMAIL_SEND_FROM: str = os.environ.get("EMAIL_SEND_FROM", "")
+EMAIL_SEND_FROM_PASSWORD: str = os.environ.get("EMAIL_SEND_FROM_PASSWORD", "")
+EMAIL_SEND_TO: str = os.environ.get("EMAIL_SEND_TO", "")
+
+# ---------------------------------------------------------------------------
+# Scraper settings
+# ---------------------------------------------------------------------------
+# Headless mode: auto-detected (True inside Docker, False locally).
+# Can be overridden in .env with HEADLESS=true/false.
+IS_DOCKER: bool = os.path.exists("/.dockerenv")
+_headless_env = os.environ.get("HEADLESS")
+HEADLESS: bool = (
+    _headless_env.lower() in ("true", "1", "yes")
+    if _headless_env is not None
+    else IS_DOCKER
+)
+
+# ---------------------------------------------------------------------------
 # Paths
-DATA_DIR = os.path.join(BASE_DIR, "data")
-DB_PATH = os.path.join(DATA_DIR, "prices.db")
-LOGS_DIR = os.path.join(BASE_DIR, "logs")
-LOG_FILE = os.path.join(LOGS_DIR, "app.log")
+# ---------------------------------------------------------------------------
+DATA_DIR: str = str(BASE_DIR / "data")
+LOGS_DIR: str = str(BASE_DIR / "logs")
+LOG_FILE: str = str(BASE_DIR / "logs" / "app.log")
 
-# Ensure required directories exist
+# Ensure required directories exist on startup
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(LOGS_DIR, exist_ok=True)
+
+# ---------------------------------------------------------------------------
+# Database
+# ---------------------------------------------------------------------------
+# Leave DATABASE_URL blank (or unset) to use SQLite locally.
+# Set it to a PostgreSQL URL to use a shared/live database.
+#
+# SQLite  (default): DATABASE_URL=  ← blank or not set
+# PostgreSQL:        DATABASE_URL=postgresql://user:pass@host:5432/hotels_db
+DATABASE_URL: str = os.environ.get("DATABASE_URL", "").strip()
+
+# SQLite file path — only used when DATABASE_URL is not set
+DB_PATH: str = str(BASE_DIR / "data" / "prices.db")

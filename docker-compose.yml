@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   hotel-scraper:
     build: .
@@ -12,6 +10,5 @@ services:
       - ./data:/app/data
       # Map the logs folder to persist application logs
       - ./logs:/app/logs
-    # Setting an automatic restart policy. 
-    # If it fails, it won't spin loop infinitely, it restarts unless explicitly stopped.
-    restart: unless-stopped
+    # Scraper runs once and exits — schedule via host cron or external orchestrator
+    restart: "no"
