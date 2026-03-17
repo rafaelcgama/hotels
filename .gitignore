@@ -1,16 +1,23 @@
 # IDE
 .idea/
 .vscode/
+.claude/
 
 # Python
 __pycache__/
 *.pyc
 *.pyo
+*.egg-info/
+dist/
+build/
 .pytest_cache/
+.ruff_cache/
 .coverage
+htmlcov/
 
 # Virtual environment
 .venv/
+venv/
 
 # Environment variables (keep .env.example, ignore .env)
 .env
