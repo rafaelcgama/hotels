@@ -1,7 +1,7 @@
 import os
 import sqlite3
 import pytest
-from src.database import init_db, insert_hotel_prices
+from src.database import init_db, insert_hotel_prices, get_db_connection
 
 
 @pytest.fixture
@@ -16,6 +16,9 @@ def mock_db_path(monkeypatch, tmp_path):
     return str(test_db)
 
 
+# ---------------------------------------------------------------------------
+# Schema / init tests
+# ---------------------------------------------------------------------------
 def test_init_db_creates_schema(mock_db_path):
     """init_db must create the file and the hotel_prices table."""
     init_db()
@@ -31,6 +34,64 @@ def test_init_db_creates_schema(mock_db_path):
     conn.close()
 
 
+def test_init_db_is_idempotent(mock_db_path):
+    """Calling init_db twice must not raise."""
+    init_db()
+    init_db()
+
+    conn = sqlite3.connect(mock_db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE name='hotel_prices'")
+    assert cursor.fetchone()[0] == 1
+    conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Connection context manager tests
+# ---------------------------------------------------------------------------
+def test_get_db_connection_commits_on_success(mock_db_path):
+    """Connection must auto-commit when the context block succeeds."""
+    init_db()
+
+    with get_db_connection() as conn:
+        conn.execute(
+            "INSERT INTO hotel_prices (fetch_date, city, hotel_name, checkin_date, price) "
+            "VALUES (?, ?, ?, ?, ?)",
+            ("2024-01-01", "Taubate", "Test Hotel", "2024-01-10", 100),
+        )
+
+    # Verify data was committed
+    verify_conn = sqlite3.connect(mock_db_path)
+    cursor = verify_conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM hotel_prices")
+    assert cursor.fetchone()[0] == 1
+    verify_conn.close()
+
+
+def test_get_db_connection_rolls_back_on_error(mock_db_path):
+    """Connection must rollback when an exception occurs inside the context."""
+    init_db()
+
+    with pytest.raises(ValueError):
+        with get_db_connection() as conn:
+            conn.execute(
+                "INSERT INTO hotel_prices (fetch_date, city, hotel_name, checkin_date, price) "
+                "VALUES (?, ?, ?, ?, ?)",
+                ("2024-01-01", "Taubate", "Test Hotel", "2024-01-10", 100),
+            )
+            raise ValueError("Simulated error")
+
+    # Verify data was NOT committed
+    verify_conn = sqlite3.connect(mock_db_path)
+    cursor = verify_conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM hotel_prices")
+    assert cursor.fetchone()[0] == 0
+    verify_conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Insert / upsert tests
+# ---------------------------------------------------------------------------
 def test_insert_hotel_prices(mock_db_path):
     """Records are inserted correctly and metadata keys are filtered out."""
     init_db()
@@ -115,3 +176,23 @@ def test_insert_only_metadata_keys_is_noop(mock_db_path):
     conn.close()
 
     assert count == 0
+
+
+def test_insert_multiple_hotels_single_call(mock_db_path):
+    """Multiple hotels in a single call should all be inserted."""
+    init_db()
+
+    prices = {
+        "Hotel A": 100,
+        "Hotel B": 200,
+        "Hotel C": 300,
+    }
+    insert_hotel_prices("2024-05-01", "Taubate", "2024-05-10", prices)
+
+    conn = sqlite3.connect(mock_db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM hotel_prices")
+    count = cursor.fetchone()[0]
+    conn.close()
+
+    assert count == 3

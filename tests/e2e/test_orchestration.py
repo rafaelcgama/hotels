@@ -1,44 +1,100 @@
+import sqlite3
 from unittest.mock import MagicMock
 
-# Import the orchestrator's main flow
 from main import main
 
 
-def test_main_orchestration(mocker):
+def test_main_orchestration_with_real_db(mocker, tmp_path):
     """
-    End-to-End Test for the Orchestrator loop without hitting actual external services.
-    We mock the Scraper, Database dependencies, and the Email mechanism.
+    End-to-End test: runs the full orchestrator with a real SQLite database.
+    Only the WebDriver and Selenium scraping are mocked (can't hit Booking.com).
+    The database layer runs for real against a temporary SQLite file.
     """
+    # Point the DB to a temp file — real SQLite, not mocked
+    test_db = str(tmp_path / "e2e_prices.db")
+    mocker.patch("src.database.DB_PATH", test_db)
+    mocker.patch("src.database._USE_POSTGRES", False)
 
-    # 1. Mock DB Initialization
-    mock_init_db = mocker.patch("main.init_db")
+    # Limit to 2 days so the test finishes fast
+    mocker.patch("main.DAYS_AHEAD", 2)
 
-    # 2. Mock the Webdriver creation
-    mock_driver_instance = MagicMock()
-    mock_create_webdriver = mocker.patch(
-        "main.create_webdriver", return_value=mock_driver_instance
-    )
+    # Mock the WebDriver
+    mock_driver = MagicMock()
+    mocker.patch("main.create_webdriver", return_value=mock_driver)
 
-    # 3. Mock the Scraper loop
-    # Simulate scraper returning valid dictionaries
-    mock_collect = mocker.patch(
-        "main.collect_hotel_prices",
-        return_value={"Check_in": "2024-05-10", "Faro Hotel Taubaté": 300},
-    )
+    # Mock the scraper to return realistic data
+    def fake_scrape(driver, city, checkin_date, checkout_date, hotel_competitors, retries):
+        return {
+            "Check_in": checkin_date,
+            "Timestamp": "2024-05-01",
+            "Faro Hotel Taubaté": 250,
+            "Ibis Taubate": 180,
+        }
 
-    # 4. Mock the DB ingestion function
-    mock_insert_prices = mocker.patch("main.insert_hotel_prices")
+    mocker.patch("main.collect_hotel_prices", side_effect=fake_scrape)
 
-    # Run the orchestrator!
+    # Run the full orchestrator
     main()
 
-    # Validations
-    mock_init_db.assert_called_once()
-    mock_create_webdriver.assert_called_once()
+    # Verify: driver was created and cleaned up
+    mock_driver.quit.assert_called_once()
 
-    # Expect drivers to be closed
-    mock_driver_instance.quit.assert_called_once()
+    # Verify: real data was written to the real SQLite DB
+    conn = sqlite3.connect(test_db)
+    cursor = conn.cursor()
 
-    # Expect the scraper to be called explicitly
-    assert mock_collect.call_count > 0
-    assert mock_insert_prices.call_count > 0
+    cursor.execute("SELECT COUNT(*) FROM hotel_prices")
+    total_rows = cursor.fetchone()[0]
+    # 2 date pairs x 2 hotels = 4 rows
+    assert total_rows == 4
+
+    cursor.execute("SELECT DISTINCT hotel_name FROM hotel_prices ORDER BY hotel_name")
+    hotels = [row[0] for row in cursor.fetchall()]
+    assert hotels == ["Faro Hotel Taubaté", "Ibis Taubate"]
+
+    cursor.execute("SELECT price FROM hotel_prices WHERE hotel_name='Faro Hotel Taubaté'")
+    prices = [row[0] for row in cursor.fetchall()]
+    assert all(p == 250 for p in prices)
+
+    conn.close()
+
+
+def test_main_orchestration_partial_failure(mocker, tmp_path):
+    """
+    E2E: one date-pair fails, the rest still succeed and get written to the DB.
+    """
+    test_db = str(tmp_path / "e2e_prices.db")
+    mocker.patch("src.database.DB_PATH", test_db)
+    mocker.patch("src.database._USE_POSTGRES", False)
+    mocker.patch("main.DAYS_AHEAD", 3)
+
+    mock_driver = MagicMock()
+    mocker.patch("main.create_webdriver", return_value=mock_driver)
+
+    call_count = 0
+
+    def fake_scrape_with_failure(driver, city, checkin_date, checkout_date, hotel_competitors, retries):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 2:
+            raise Exception("Simulated scraper failure")
+        return {
+            "Check_in": checkin_date,
+            "Timestamp": "2024-05-01",
+            "Faro Hotel Taubaté": 300,
+        }
+
+    mocker.patch("main.collect_hotel_prices", side_effect=fake_scrape_with_failure)
+
+    main()
+
+    mock_driver.quit.assert_called_once()
+
+    # 3 date pairs, 1 failed => 2 succeeded x 1 hotel = 2 rows
+    conn = sqlite3.connect(test_db)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM hotel_prices")
+    total_rows = cursor.fetchone()[0]
+    conn.close()
+
+    assert total_rows == 2
