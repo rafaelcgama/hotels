@@ -31,7 +31,7 @@ HOTEL_COMPETITORS: list = (
 DAYS_AHEAD: int = int(os.environ.get("DAYS_AHEAD", 31))
 
 # ---------------------------------------------------------------------------
-# Email settings
+# Email settings (optional, not yet implemented)
 # ---------------------------------------------------------------------------
 EMAIL_SEND_FROM: str = os.environ.get("EMAIL_SEND_FROM", "")
 EMAIL_SEND_FROM_PASSWORD: str = os.environ.get("EMAIL_SEND_FROM_PASSWORD", "")

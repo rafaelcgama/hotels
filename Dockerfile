@@ -1,4 +1,3 @@
-# Use a lightweight Python image
 FROM python:3.11-slim
 
 # Set environment variables to prevent Python from writing .pyc files
@@ -9,27 +8,23 @@ ENV PYTHONUNBUFFERED=1
 # Set Chrome binary path for the scraper
 ENV CHROME_BINARY=/usr/bin/chromium
 
-# Install required system packages, Chromium, and its webdriver
-RUN apt-get update && apt-get install -y \
+# Install Chromium and its webdriver
+RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     chromium-driver \
-    wget \
-    gnupg \
     && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory
 WORKDIR /app
 
-# Copy the requirements file into the container at /app
-COPY requirements.txt /app/
-
-# Install the Python dependencies
+# Copy and install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
-COPY . /app/
+# Copy application code
+COPY main.py .
+COPY src/ src/
 
-# Create necessary directories that will be mounted as volumes
+# Create directories for mounted volumes
 RUN mkdir -p logs data
 
 # Default command to execute the scraper orchestrator

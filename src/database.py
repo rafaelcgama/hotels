@@ -88,83 +88,30 @@ def init_db() -> None:
     """
     if _USE_POSTGRES:
         ddl = """
-              CREATE TABLE IF NOT EXISTS hotel_prices
-              (
-                  id
-                  SERIAL
-                  PRIMARY
-                  KEY,
-                  fetch_date
-                  TEXT
-                  NOT
-                  NULL,
-                  city
-                  TEXT
-                  NOT
-                  NULL,
-                  hotel_name
-                  TEXT
-                  NOT
-                  NULL,
-                  checkin_date
-                  TEXT
-                  NOT
-                  NULL,
-                  price
-                  INTEGER,
-                  inserted_at
-                  TIMESTAMP
-                  DEFAULT
-                  CURRENT_TIMESTAMP,
-                  UNIQUE
-              (
-                  fetch_date,
-                  city,
-                  hotel_name,
-                  checkin_date
-              )
-                  ) \
-              """
+            CREATE TABLE IF NOT EXISTS hotel_prices (
+                id           SERIAL PRIMARY KEY,
+                fetch_date   TEXT NOT NULL,
+                city         TEXT NOT NULL,
+                hotel_name   TEXT NOT NULL,
+                checkin_date TEXT NOT NULL,
+                price        INTEGER,
+                inserted_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (fetch_date, city, hotel_name, checkin_date)
+            )
+        """
     else:
         ddl = """
-              CREATE TABLE IF NOT EXISTS hotel_prices
-              (
-                  id
-                  INTEGER
-                  PRIMARY
-                  KEY
-                  AUTOINCREMENT,
-                  fetch_date
-                  TEXT
-                  NOT
-                  NULL,
-                  city
-                  TEXT
-                  NOT
-                  NULL,
-                  hotel_name
-                  TEXT
-                  NOT
-                  NULL,
-                  checkin_date
-                  TEXT
-                  NOT
-                  NULL,
-                  price
-                  INTEGER,
-                  inserted_at
-                  DATETIME
-                  DEFAULT
-                  CURRENT_TIMESTAMP,
-                  UNIQUE
-              (
-                  fetch_date,
-                  city,
-                  hotel_name,
-                  checkin_date
-              )
-                  ) \
-              """
+            CREATE TABLE IF NOT EXISTS hotel_prices (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                fetch_date   TEXT NOT NULL,
+                city         TEXT NOT NULL,
+                hotel_name   TEXT NOT NULL,
+                checkin_date TEXT NOT NULL,
+                price        INTEGER,
+                inserted_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (fetch_date, city, hotel_name, checkin_date)
+            )
+        """
 
     with get_db_connection() as conn:
         conn.execute(ddl)
@@ -174,10 +121,10 @@ def init_db() -> None:
 
 
 def insert_hotel_prices(
-    fetch_date: str,
-    city: str,
-    checkin_date: str,
-    hotel_prices: Dict[str, Union[int, None]],
+        fetch_date: str,
+        city: str,
+        checkin_date: str,
+        hotel_prices: Dict[str, Union[int, None]],
 ) -> None:
     """
     Inserts or updates scraped hotel prices into the database.

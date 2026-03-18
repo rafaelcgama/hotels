@@ -1,17 +1,31 @@
 # 🏨 Hotel Price Tracker — Taubaté, SP
 
-Automated daily scraper that **captures hotel prices** from Booking.com for a list of competitor hotels in **Taubaté, São Paulo** and stores them locally (SQLite) or in a shared database (PostgreSQL).
+Automated daily scraper that captures hotel prices from Booking.com for competitor hotels in **Taubaté, São Paulo** and stores them locally (SQLite) or in a shared database (PostgreSQL).
 
 ## 📌 Features
 
-✅ **Tracks multiple hotels** dynamically from a configurable list  
-✅ **Automated data collection** using Selenium with Chrome/Chromium  
-✅ **Configurable headless/visible mode** — visible locally for debugging, headless in Docker  
-✅ **Structured SQL storage** with UPSERT support (re-running the scraper is always safe)  
-✅ **SQLite by default** — zero setup, works out of the box  
-✅ **PostgreSQL ready** — switch with one environment variable when you need a shared database  
-✅ **Docker support** for easy deployment and containerized scheduling  
-✅ **Robust testing** with `pytest`  
+- Tracks multiple hotels dynamically from a configurable list
+- Automated data collection using Selenium with Chrome/Chromium
+- Configurable headless/visible mode (visible locally for debugging, headless in Docker)
+- Structured SQL storage with UPSERT support (re-running the scraper is always safe)
+- SQLite by default — zero setup, works out of the box
+- PostgreSQL ready — switch with one environment variable
+- Docker support for containerized deployment
+- Comprehensive test suite (unit + E2E)
+
+---
+
+## 🔄 How It Works
+
+Each run goes through the following pipeline:
+
+1. **Initialize database** — creates the `hotel_prices` table if it doesn't exist
+2. **Generate date pairs** — builds check-in/check-out pairs for the next `DAYS_AHEAD` nights
+3. **Launch browser** — opens a single Selenium session for the entire run
+4. **Scrape & store** — for each date pair, searches Booking.com, matches competitor hotels by name (accent-insensitive), extracts the lowest price, and upserts the result into the database
+5. **Cleanup** — closes the browser session, even if errors occurred
+
+If a single date pair fails, the scraper logs the error and continues with the next one.
 
 ---
 
@@ -20,11 +34,9 @@ Automated daily scraper that **captures hotel prices** from Booking.com for a li
 ```
 hotels/
 ├── main.py                     # Orchestrator entry point
-├── send_email.py               # Email notification (optional)
 ├── run_hotels.sh               # Shell script for cron scheduling
+├── requirements.txt            # Dependencies (runtime + testing)
 ├── setup.cfg                   # Pytest & coverage configuration
-
-├── requirements.txt            # All dependencies (runtime + testing)
 ├── Dockerfile                  # Container image definition
 ├── docker-compose.yml          # Container orchestration
 ├── src/
@@ -36,7 +48,7 @@ hotels/
 │       └── logger.py           # Dual logger (console + file)
 ├── tests/
 │   ├── unit/                   # Unit tests
-│   └── e2e/                    # End-to-end orchestration tests
+│   └── e2e/                    # End-to-end pipeline tests
 ├── data/                       # SQLite database (auto-created, gitignored)
 └── logs/                       # Application logs (auto-created, gitignored)
 ```
@@ -47,7 +59,7 @@ hotels/
 
 Configuration is resolved with the following **priority order**:
 1. **Environment variables** (`.env` file or system env) — highest priority
-2. **Hardcoded defaults** — fallback
+2. **Hardcoded defaults** in `src/config.py` — fallback
 
 ### Environment Variables (`.env`)
 
@@ -63,13 +75,13 @@ Copy `.env.example` to `.env` and customize:
 | `EMAIL_SEND_FROM` | Sender email address | *(empty)* |
 | `EMAIL_SEND_FROM_PASSWORD` | Sender email password/app password | *(empty)* |
 | `EMAIL_SEND_TO` | Recipient email address | *(empty)* |
-| `DATABASE_URL` | PostgreSQL connection string | *(empty → SQLite)* |
+| `DATABASE_URL` | PostgreSQL connection string | *(empty — uses SQLite)* |
 
 ---
 
 ## 🔧 Installation & Setup
 
-### 1️⃣ Running locally (Python venv)
+### Running locally (Python venv)
 
 ```bash
 # Create and activate a virtual environment
@@ -86,7 +98,7 @@ cp .env.example .env
 python main.py
 ```
 
-### 2️⃣ Running via Docker (full stack)
+### Running via Docker
 
 Ensure you have Docker and Docker Compose installed.
 
@@ -95,17 +107,17 @@ docker-compose build
 docker-compose up
 ```
 
-> The container runs the scraper once and exits. Schedule daily runs with your host machine's cron:
-> ```bash
-> 0 8 * * * cd /path/to/hotels && docker-compose up
-> ```
+The container runs the scraper once and exits. Schedule daily runs with your host machine's cron:
 
-### 3️⃣ Automated Scheduling (Cron)
+```bash
+0 8 * * * cd /path/to/hotels && docker-compose up
+```
+
+### Automated Scheduling (Cron)
 
 Use the included `run_hotels.sh` script with `crontab`:
 
 ```bash
-# Edit crontab
 crontab -e
 
 # Add a daily run at 8am
@@ -138,9 +150,23 @@ Open it with any SQLite viewer (e.g., [DB Browser for SQLite](https://sqlitebrow
 sqlite3 data/prices.db "SELECT * FROM hotel_prices ORDER BY checkin_date LIMIT 10;"
 ```
 
+### Database Schema
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | INTEGER | Auto-incrementing primary key |
+| `fetch_date` | TEXT | Date the scraper ran (YYYY-MM-DD) |
+| `city` | TEXT | Destination city searched |
+| `hotel_name` | TEXT | Exact name from the competitors list |
+| `checkin_date` | TEXT | Check-in date (YYYY-MM-DD) |
+| `price` | INTEGER | Lowest price found (`NULL` if not listed) |
+| `inserted_at` | DATETIME | Auto-set on insert, updated on upsert |
+
+Unique constraint on `(fetch_date, city, hotel_name, checkin_date)` — re-running the scraper updates existing rows instead of creating duplicates.
+
 ---
 
-## 🐘 Migrating to PostgreSQL (when ready)
+## 🐘 Migrating to PostgreSQL
 
 When you're ready to use a **shared, live database** (e.g., Supabase, Neon, Railway, or your own server), migration is a single environment variable change — no code changes needed.
 
@@ -165,10 +191,8 @@ DATABASE_URL=postgresql://user:password@host:5432/hotels_db
 
 **3. Run the scraper — that's it.** The app detects `DATABASE_URL` automatically and switches to PostgreSQL.
 
-### Recommended free cloud PostgreSQL options
+### Recommended free cloud PostgreSQL providers
 
-| Provider | Free tier | Notes |
-|:---|:---|:---|
-| [Supabase](https://supabase.com) | ✅ Generous | Has a web UI dashboard |
-| [Neon](https://neon.tech) | ✅ Generous | Serverless Postgres |
-| [Railway](https://railway.app) | ✅ Small | Easy to set up |
+- **[Supabase](https://supabase.com)** — generous free tier with web UI dashboard
+- **[Neon](https://neon.tech)** — generous free tier, serverless Postgres
+- **[Railway](https://railway.app)** — small free tier, easy to set up

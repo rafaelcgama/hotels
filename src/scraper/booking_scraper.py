@@ -77,12 +77,12 @@ def wait_for_page_load(driver: WebDriver, timeout: int = 15) -> bool:
 
 
 def collect_hotel_prices(
-    driver: WebDriver,
-    city: str,
-    checkin_date: str,
-    checkout_date: str,
-    hotel_competitors: List[str],
-    retries: int = 2,
+        driver: WebDriver,
+        city: str,
+        checkin_date: str,
+        checkout_date: str,
+        hotel_competitors: List[str],
+        retries: int = 2,
 ) -> Dict[str, Union[int, None]]:
     """
     Scrapes prices for a list of target hotels from Booking.com.
