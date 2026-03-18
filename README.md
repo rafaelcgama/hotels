@@ -1,34 +1,198 @@
+# 🏨 Hotel Price Tracker — Taubaté, SP
 
-# 🏨 Hotel Price Tracker - Taubaté, SP
+Automated daily scraper that captures hotel prices from Booking.com for competitor hotels in **Taubaté, São Paulo** and stores them locally (SQLite) or in a shared database (PostgreSQL).
 
-This project **captures hotel prices** from a given list of hotels in **Taubaté, São Paulo** at a specific time of the day and saves the results as a `.csv` file inside the `data/` folder.
+## 📌 Features
+
+- Tracks multiple hotels dynamically from a configurable list
+- Automated data collection using Selenium with Chrome/Chromium
+- Configurable headless/visible mode (visible locally for debugging, headless in Docker)
+- Structured SQL storage with UPSERT support (re-running the scraper is always safe)
+- SQLite by default — zero setup, works out of the box
+- PostgreSQL ready — switch with one environment variable
+- Docker support for containerized deployment
+- Comprehensive test suite (unit + E2E)
 
 ---
 
-## 📌 Features
-✅ **Tracks multiple hotels** in Taubaté, SP  
-✅ **Automated data collection** at a given time  
-✅ **Saves results in `.csv` format** for easy analysis  
-✅ **Runs in a Python environment** with minimal dependencies  
+## 🔄 How It Works
+
+Each run goes through the following pipeline:
+
+1. **Initialize database** — creates the `hotel_prices` table if it doesn't exist
+2. **Generate date pairs** — builds check-in/check-out pairs for the next `DAYS_AHEAD` nights
+3. **Launch browser** — opens a single Selenium session for the entire run
+4. **Scrape & store** — for each date pair, searches Booking.com, matches competitor hotels by name (accent-insensitive), extracts the lowest price, and upserts the result into the database
+5. **Cleanup** — closes the browser session, even if errors occurred
+
+If a single date pair fails, the scraper logs the error and continues with the next one.
+
+---
+
+## 📁 Project Structure
+
+```
+hotels/
+├── main.py                     # Orchestrator entry point
+├── run_hotels.sh               # Shell script for cron scheduling
+├── requirements.txt            # Dependencies (runtime + testing)
+├── setup.cfg                   # Pytest & coverage configuration
+├── Dockerfile                  # Container image definition
+├── docker-compose.yml          # Container orchestration
+├── src/
+│   ├── config.py               # Centralized configuration
+│   ├── database.py             # Database layer (SQLite or PostgreSQL)
+│   ├── scraper/
+│   │   └── booking_scraper.py  # Selenium scraper for Booking.com
+│   └── utils/
+│       └── logger.py           # Dual logger (console + file)
+├── tests/
+│   ├── unit/                   # Unit tests
+│   └── e2e/                    # End-to-end pipeline tests
+├── data/                       # SQLite database (auto-created, gitignored)
+└── logs/                       # Application logs (auto-created, gitignored)
+```
+
+---
+
+## ⚙️ Configuration
+
+Configuration is resolved with the following **priority order**:
+1. **Environment variables** (`.env` file or system env) — highest priority
+2. **Hardcoded defaults** in `src/config.py` — fallback
+
+### Environment Variables (`.env`)
+
+Copy `.env.example` to `.env` and customize:
+
+| Variable | Description | Default |
+|---|---|---|
+| `CHROME_BINARY` | Path to Chrome/Chromium binary | Auto-detected |
+| `HEADLESS` | Run browser in headless mode | `True` in Docker, `False` locally |
+| `CITY` | Target city for hotel search | `Taubate` |
+| `DAYS_AHEAD` | Number of nights to scrape ahead | `31` |
+| `HOTEL_COMPETITORS` | Comma-separated list of hotels | Uses `config.py` default list |
+| `EMAIL_SEND_FROM` | Sender email address | *(empty)* |
+| `EMAIL_SEND_FROM_PASSWORD` | Sender email password/app password | *(empty)* |
+| `EMAIL_SEND_TO` | Recipient email address | *(empty)* |
+| `DATABASE_URL` | PostgreSQL connection string | *(empty — uses SQLite)* |
 
 ---
 
 ## 🔧 Installation & Setup
 
-### **1️⃣ Create a Python Virtual Environment**
-To ensure dependencies are properly managed, create a virtual environment following the instructions in https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html
+### Running locally (Python venv)
 
-### **2️⃣ Run the Script**
-1. **Open `main.py`** in your IDE or terminal.
-2. **Run the script**:
-   - **In PyCharm**: Right-click `collect_rates.py` and select **Run**.
-   - **In Terminal**:
-     ```sh
-     python collect_rates.py
-     ```
-### **3️⃣ Locate the Results**
-- After execution, the **CSV files** will be saved inside the **`data/` folder**.
-- The filename follows the format:
-```data/YYYY-MM-DD_HH-MM-SS/booking_hotel_prices_taubate.csv```
-- Example:
-```data/2025-03-11_14:30:00_booking_hotel_prices_taubate.csv```
+```bash
+# Create and activate a virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install all dependencies
+pip install -r requirements.txt
+
+# Copy and edit your config
+cp .env.example .env
+
+# Run the scraper
+python main.py
+```
+
+### Running via Docker
+
+Ensure you have Docker and Docker Compose installed.
+
+```bash
+docker-compose build
+docker-compose up
+```
+
+The container runs the scraper once and exits. Schedule daily runs with your host machine's cron:
+
+```bash
+0 8 * * * cd /path/to/hotels && docker-compose up
+```
+
+### Automated Scheduling (Cron)
+
+Use the included `run_hotels.sh` script with `crontab`:
+
+```bash
+crontab -e
+
+# Add a daily run at 8am
+0 8 * * * /path/to/hotels/run_hotels.sh >> /path/to/hotels/cron.log 2>&1
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests with coverage
+pytest --cov
+
+# Run just unit tests
+pytest tests/unit/
+
+# Run just E2E tests
+pytest tests/e2e/
+```
+
+---
+
+## 📊 Viewing Results
+
+The database is automatically created at `data/prices.db` (SQLite).
+Open it with any SQLite viewer (e.g., [DB Browser for SQLite](https://sqlitebrowser.org), DBeaver):
+
+```bash
+sqlite3 data/prices.db "SELECT * FROM hotel_prices ORDER BY checkin_date LIMIT 10;"
+```
+
+### Database Schema
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | INTEGER | Auto-incrementing primary key |
+| `fetch_date` | TEXT | Date the scraper ran (YYYY-MM-DD) |
+| `city` | TEXT | Destination city searched |
+| `hotel_name` | TEXT | Exact name from the competitors list |
+| `checkin_date` | TEXT | Check-in date (YYYY-MM-DD) |
+| `price` | INTEGER | Lowest price found (`NULL` if not listed) |
+| `inserted_at` | DATETIME | Auto-set on insert, updated on upsert |
+
+Unique constraint on `(fetch_date, city, hotel_name, checkin_date)` — re-running the scraper updates existing rows instead of creating duplicates.
+
+---
+
+## 🐘 Migrating to PostgreSQL
+
+When you're ready to use a **shared, live database** (e.g., Supabase, Neon, Railway, or your own server), migration is a single environment variable change — no code changes needed.
+
+### Steps
+
+**1. Install the PostgreSQL driver:**
+```bash
+# In requirements.txt, uncomment:
+# psycopg2-binary>=2.9.9
+
+pip install psycopg2-binary
+```
+
+**2. Set `DATABASE_URL` in your `.env`:**
+```bash
+# Local development (Postgres.app)
+DATABASE_URL=postgresql://localhost/hotels_db
+
+# Cloud database (Supabase, Neon, Railway, etc.)
+DATABASE_URL=postgresql://user:password@host:5432/hotels_db
+```
+
+**3. Run the scraper — that's it.** The app detects `DATABASE_URL` automatically and switches to PostgreSQL.
+
+### Recommended free cloud PostgreSQL providers
+
+- **[Supabase](https://supabase.com)** — generous free tier with web UI dashboard
+- **[Neon](https://neon.tech)** — generous free tier, serverless Postgres
+- **[Railway](https://railway.app)** — small free tier, easy to set up

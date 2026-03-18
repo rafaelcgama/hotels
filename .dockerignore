@@ -1,0 +1,49 @@
+# Git
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Testing (not needed in production image)
+tests/
+setup.cfg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment
+.env
+.env.example
+
+# Logs and data (mounted as volumes)
+logs/
+*.log
+data/
+*.sqlite3
+*.db
+*.csv
+
+# IDE and OS
+.idea/
+.vscode/
+.claude/
+.DS_Store
+
+# Documentation (not needed in image)
+README.md
+
+# Cron helper (host-side only)
+run_hotels.sh
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb

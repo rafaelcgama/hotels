@@ -1,47 +1,35 @@
-# pycharm
+# IDE
 .idea/
-.idea
-*.vscode
-**.vscode/**
+.vscode/
+.claude/
 
+# Python
+__pycache__/
 *.pyc
-
-
-**.vscode/**
-# Packages
-*.egg
-*.egg-info
-build
-eggs
-parts
-bin
-var
-sdist
-develop-eggs
-.installed.cfg
-lib
-lib64
-venv
-/venv/*
-
-# Installer logs
-pip-log.txt
-
-# Unit test / coverage reports
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
 .coverage
-.tox
-nosetests.xml
+htmlcov/
 
-# environment variables
-*.env
+# Virtual environment
+.venv/
+venv/
 
-#jupyter files
-/.ipynb_checkpoints/
-*.ipynb
+# Environment variables (keep .env.example, ignore .env)
+.env
+!.env.example
 
+# macOS
 .DS_Store
-data
-old_data
+
+# Data and logs (generated at runtime)
+data/
+logs/
 *.log
+*.db
+*.sqlite3
 *.zip
-#mf
